@@ -163,15 +163,7 @@ namespace SimpleMemoryReading64and32
             string[] array = hexBytes.Split(' ');
             byte[] bytes = new byte[array.Length];
             for (int i = 0; i < array.Length; i++) bytes[i] = Convert.ToByte(array[i], 16);
-            IntPtr address = baseAddress;
-            byte[] buffer = new byte[IntPtr.Size];
-            for (int i = 0; i < offsets.Length - 1; i++)
-            {
-                Imports.ReadProcessMemory(handle, address + offsets[i], buffer, buffer.Length, IntPtr.Zero);
-                address = (IntPtr)(IntPtr.Size == 4 ? BitConverter.ToInt32(buffer, 0) : BitConverter.ToInt64(buffer, 0));
-            }
-            if (offsets.Length > 0) address += offsets[offsets.Length - 1];
-            return Imports.WriteProcessMemory(handle, address, bytes, bytes.Length, IntPtr.Zero);
+            return WriteBytes(baseAddress, bytes, offsets);
         }
 
         public bool WriteInt(IntPtr address, int value, params int[] offsets)

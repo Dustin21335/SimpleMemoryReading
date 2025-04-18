@@ -9,7 +9,7 @@
     <PackageId>SimpleMemoryReading</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>Dustin</Authors>
     <Company>._._.Dustin</Company>
     <Description>Simple memory reading and writing library</Description>
@@ -17,6 +17,6 @@
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
       <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 </Project>
