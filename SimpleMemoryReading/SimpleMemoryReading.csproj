@@ -1,21 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net481</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>SimpleMemoryReading64and32</RootNamespace>
     <AssemblyName>SimpleMemoryReading</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Nullable>disable</Nullable>
     <PackageId>SimpleMemoryReading</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.0</Version>
+    <Version>1.0.2</Version>
     <Authors>Dustin</Authors>
     <Company>._._.Dustin</Company>
     <Description>Simple memory reading and writing library</Description>
     <RepositoryUrl>https://github.com/Dustin21335/SimpleMemoryReading</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
-
       <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
