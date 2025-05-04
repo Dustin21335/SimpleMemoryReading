@@ -63,9 +63,9 @@ namespace SimpleMemoryReading64and32
             byte[] buffer = new byte[IntPtr.Size];
             for (int i = 0; i < offsets.Length; i++)
             {
-                IntPtr raddress = address + offsets[i];
-                if (!Imports.ReadProcessMemory(handle, raddress, buffer, buffer.Length, IntPtr.Zero)) return IntPtr.Zero;
-                address = IntPtr.Size == 4 ? (IntPtr)(BitConverter.ToInt32(buffer, 0)) : (IntPtr)(BitConverter.ToInt64(buffer, 0));
+                if (!Imports.ReadProcessMemory(handle, address, buffer, buffer.Length, IntPtr.Zero)) return IntPtr.Zero;
+                address = IntPtr.Size == 4 ? (IntPtr)BitConverter.ToInt32(buffer, 0) : (IntPtr)BitConverter.ToInt64(buffer, 0);
+                address += offsets[i];
             }
             return address;
         }
