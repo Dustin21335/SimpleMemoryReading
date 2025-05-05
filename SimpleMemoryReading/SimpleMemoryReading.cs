@@ -62,6 +62,13 @@ namespace SimpleMemoryReading64and32
             return ReadBytes(baseAddress, bytes, offsets.Select(o => (int)o).ToArray());
         }
 
+        public byte[] ReadBytes(IntPtr address, int size)
+        {
+            byte[] buffer = new byte[size];
+            Imports.ReadProcessMemory(handle, address, buffer, size, IntPtr.Zero);
+            return buffer;
+        }
+
         public IntPtr ReadPointer(IntPtr baseAddress, params int[] offsets)
         {
             IntPtr address = baseAddress;
@@ -80,6 +87,12 @@ namespace SimpleMemoryReading64and32
             return ReadPointer(address, offsets.Select(o => (int)o).ToArray());
         }
 
+        public IntPtr ReadPointer(IntPtr address)
+        {
+            byte[] buffer = new byte[IntPtr.Size];
+            return Imports.ReadProcessMemory(handle, address, buffer, buffer.Length, IntPtr.Zero) ? (IntPtr)(IntPtr.Size == 4 ? BitConverter.ToInt32(buffer, 0) : BitConverter.ToInt64(buffer, 0)) : IntPtr.Zero;
+        }
+
         public int ReadInt(IntPtr address, params int[] offsets)
         {
             return BitConverter.ToInt32(ReadBytes(address, 4, offsets), 0);
@@ -88,6 +101,11 @@ namespace SimpleMemoryReading64and32
         public int ReadInt(IntPtr address, params IntPtr[] offsets)
         {
             return ReadInt(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public int ReadInt(IntPtr address)
+        {
+            return BitConverter.ToInt32(ReadBytes(address, 4), 0);
         }
 
         public long ReadLong(IntPtr address, params int[] offsets)
@@ -100,6 +118,11 @@ namespace SimpleMemoryReading64and32
             return ReadLong(address, offsets.Select(o => (int)o).ToArray());
         }
 
+        public long ReadLong(IntPtr address)
+        {
+            return BitConverter.ToInt64(ReadBytes(address, 8), 0);
+        }
+
         public float ReadFloat(IntPtr address, params int[] offsets)
         {
             return BitConverter.ToSingle(ReadBytes(address, 4, offsets), 0);
@@ -108,6 +131,11 @@ namespace SimpleMemoryReading64and32
         public float ReadFloat(IntPtr address, params IntPtr[] offsets)
         {
             return ReadFloat(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public float ReadFloat(IntPtr address)
+        {
+            return BitConverter.ToSingle(ReadBytes(address, 4), 0);
         }
 
         public double ReadDouble(IntPtr address, params int[] offsets)
@@ -120,26 +148,128 @@ namespace SimpleMemoryReading64and32
             return ReadDouble(address, offsets.Select(o => (int)o).ToArray());
         }
 
-        public Vector3 ReadVec(IntPtr address, params int[] offsets)
+        public double ReadDouble(IntPtr address)
+        {
+            return BitConverter.ToDouble(ReadBytes(address, 8), 0);
+        }
+
+        public Vector2 ReadVector2(IntPtr address, params int[] offsets)
+        {
+            byte[] value = ReadBytes(address, 8, offsets);
+            return new Vector2(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4));
+        }
+
+        public Vector2 ReadVector2(IntPtr address, params IntPtr[] offsets)
+        {
+            return ReadVector2(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public Vector2 ReadVector2(IntPtr address)
+        {
+            byte[] value = ReadBytes(address, 8);
+            return new Vector2(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4));
+        }
+
+        public Vector3 ReadVector3(IntPtr address, params int[] offsets)
         {
             byte[] value = ReadBytes(address, 12, offsets);
             return new Vector3(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4), BitConverter.ToSingle(value, 8));
         }
 
-        public Vector3 ReadVec(IntPtr address, params IntPtr[] offsets)
+        public Vector3 ReadVector3(IntPtr address, params IntPtr[] offsets)
         {
-            return ReadVec(address, offsets.Select(o => (int)o).ToArray());
+            return ReadVector3(address, offsets.Select(o => (int)o).ToArray());
         }
 
-        public double[] ReadDoubleVec(IntPtr address, params int[] offsets)
+        public Vector3 ReadVector3(IntPtr address)
+        {
+            byte[] value = ReadBytes(address, 12);
+            return new Vector3(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4), BitConverter.ToSingle(value, 8));
+        }
+
+        public Vector4 ReadVector4(IntPtr address, params int[] offsets)
+        {
+            byte[] value = ReadBytes(address, 16, offsets);
+            return new Vector4(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4), BitConverter.ToSingle(value, 8), BitConverter.ToSingle(value, 12));
+        }
+
+        public Vector4 ReadVector4(IntPtr address, params IntPtr[] offsets)
+        {
+            return ReadVector4(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public Vector4 ReadVector4(IntPtr address)
+        {
+            byte[] value = ReadBytes(address, 16);
+            return new Vector4(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4), BitConverter.ToSingle(value, 8), BitConverter.ToSingle(value, 12));
+        }
+
+        public double[] ReadDoubleVector2(IntPtr address, params int[] offsets)
+        {
+            byte[] value = ReadBytes(address, 16, offsets);
+            return [BitConverter.ToDouble(value, 0), BitConverter.ToDouble(value, 8)];
+        }
+
+        public double[] ReadDoubleVector2(IntPtr address, params IntPtr[] offsets)
+        {
+            return ReadDoubleVector2(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public double[] ReadDoubleVector2(IntPtr address)
+        {
+            byte[] value = ReadBytes(address, 16);
+            return [BitConverter.ToDouble(value, 0), BitConverter.ToDouble(value, 8)];
+        }
+
+        public double[] ReadDoubleVector3(IntPtr address, params int[] offsets)
         {
             byte[] value = ReadBytes(address, 24, offsets);
-            return new[] { BitConverter.ToDouble(value, 0), BitConverter.ToDouble(value, 8), BitConverter.ToDouble(value, 16) };
+            return [BitConverter.ToDouble(value, 0), BitConverter.ToDouble(value, 8), BitConverter.ToDouble(value, 16)];
         }
 
-        public double[] ReadDoubleVec(IntPtr address, params IntPtr[] offsets)
+        public double[] ReadDoubleVector3(IntPtr address, params IntPtr[] offsets)
         {
-            return ReadDoubleVec(address, offsets.Select(o => (int)o).ToArray());
+            return ReadDoubleVector3(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public double[] ReadDoubleVector3(IntPtr address)
+        {
+            byte[] value = ReadBytes(address, 24);
+            return [BitConverter.ToDouble(value, 0), BitConverter.ToDouble(value, 8), BitConverter.ToDouble(value, 16)];
+        }
+
+        public double[] ReadDoubleVector4(IntPtr address, params int[] offsets)
+        {
+            byte[] value = ReadBytes(address, 32, offsets);
+            return [BitConverter.ToDouble(value, 0), BitConverter.ToDouble(value, 8), BitConverter.ToDouble(value, 16), BitConverter.ToDouble(value, 24)];
+        }
+
+        public double[] ReadDoubleVector4(IntPtr address, params IntPtr[] offsets)
+        {
+            return ReadDoubleVector4(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public double[] ReadDoubleVector4(IntPtr address)
+        {
+            byte[] value = ReadBytes(address, 32);
+            return [BitConverter.ToDouble(value, 0), BitConverter.ToDouble(value, 8), BitConverter.ToDouble(value, 16), BitConverter.ToDouble(value, 24)];
+        }
+
+        public Quaternion ReadQuaternion(IntPtr address, params int[] offsets)
+        {
+            byte[] value = ReadBytes(address, 16, offsets);
+            return new Quaternion(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4), BitConverter.ToSingle(value, 8), BitConverter.ToSingle(value, 12));
+        }
+
+        public Quaternion ReadQuaternion(IntPtr address, params IntPtr[] offsets)
+        {
+            return ReadQuaternion(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public Quaternion ReadQuaternion(IntPtr address)
+        {
+            byte[] value = ReadBytes(address, 16);
+            return new Quaternion(BitConverter.ToSingle(value, 0), BitConverter.ToSingle(value, 4), BitConverter.ToSingle(value, 8), BitConverter.ToSingle(value, 12));
         }
 
         public short ReadShort(IntPtr address, params int[] offsets)
@@ -152,6 +282,11 @@ namespace SimpleMemoryReading64and32
             return ReadShort(address, offsets.Select(o => (int)o).ToArray());
         }
 
+        public short ReadShort(IntPtr address)
+        {
+            return BitConverter.ToInt16(ReadBytes(address, 2), 0);
+        }
+
         public ushort ReadUShort(IntPtr address, params int[] offsets)
         {
             return BitConverter.ToUInt16(ReadBytes(address, 2, offsets), 0);
@@ -160,6 +295,11 @@ namespace SimpleMemoryReading64and32
         public ushort ReadUShort(IntPtr address, params IntPtr[] offsets)
         {
             return ReadUShort(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public ushort ReadUShort(IntPtr address)
+        {
+            return BitConverter.ToUInt16(ReadBytes(address, 2), 0);
         }
 
         public uint ReadUInt(IntPtr address, params int[] offsets)
@@ -172,6 +312,11 @@ namespace SimpleMemoryReading64and32
             return ReadUInt(address, offsets.Select(o => (int)o).ToArray());
         }
 
+        public uint ReadUInt(IntPtr address)
+        {
+            return BitConverter.ToUInt32(ReadBytes(address, 4), 0);
+        }
+
         public ulong ReadULong(IntPtr address, params int[] offsets)
         {
             return BitConverter.ToUInt64(ReadBytes(address, 8, offsets), 0);
@@ -180,6 +325,11 @@ namespace SimpleMemoryReading64and32
         public ulong ReadULong(IntPtr address, params IntPtr[] offsets)
         {
             return ReadULong(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public ulong ReadULong(IntPtr address)
+        {
+            return BitConverter.ToUInt64(ReadBytes(address, 8), 0);
         }
 
         public bool ReadBool(IntPtr address, params int[] offsets)
@@ -192,6 +342,11 @@ namespace SimpleMemoryReading64and32
             return ReadBool(address, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool ReadBool(IntPtr address)
+        {
+            return BitConverter.ToBoolean(ReadBytes(address, 1), 0);
+        }
+
         public string ReadString(IntPtr address, int length, params int[] offsets)
         {
             return Encoding.UTF8.GetString(ReadBytes(address, length, offsets));
@@ -202,6 +357,11 @@ namespace SimpleMemoryReading64and32
             return ReadString(address, length, offsets.Select(o => (int)o).ToArray());
         }
 
+        public string ReadString(IntPtr address, int length)
+        {
+            return Encoding.UTF8.GetString(ReadBytes(address, length));
+        }
+
         public char ReadChar(IntPtr address, params int[] offsets)
         {
             return BitConverter.ToChar(ReadBytes(address, 2, offsets), 0);
@@ -210,6 +370,11 @@ namespace SimpleMemoryReading64and32
         public char ReadChar(IntPtr address, params IntPtr[] offsets)
         {
             return ReadChar(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public char ReadChar(IntPtr address)
+        {
+            return BitConverter.ToChar(ReadBytes(address, 2), 0);
         }
 
         public float[] ReadMatrix(IntPtr address, params int[] offsets)
@@ -223,6 +388,14 @@ namespace SimpleMemoryReading64and32
         public float[] ReadMatrix(IntPtr address, params IntPtr[] offsets)
         {
             return ReadMatrix(address, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public float[] ReadMatrix(IntPtr address)
+        {
+            byte[] array = ReadBytes(address, 64);
+            float[] matrix = new float[16];
+            for (int i = 0; i < 16; i++) matrix[i] = BitConverter.ToSingle(array, i * 4);
+            return matrix;
         }
 
         public bool WriteBytes(IntPtr baseAddress, byte[] bytes, params int[] offsets)
@@ -243,6 +416,11 @@ namespace SimpleMemoryReading64and32
             return WriteBytes(baseAddress, bytes, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteBytes(IntPtr address, byte[] bytes)
+        {
+            return Imports.WriteProcessMemory(handle, address, bytes, bytes.Length, IntPtr.Zero);
+        }
+
         public bool WriteHexBytes(IntPtr baseAddress, string hexBytes, params int[] offsets)
         {
             string[] array = hexBytes.Split(' ');
@@ -256,6 +434,14 @@ namespace SimpleMemoryReading64and32
             return WriteHexBytes(baseAddress, hexBytes, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteHexBytes(IntPtr baseAddress, string hexBytes)
+        {
+            string[] array = hexBytes.Split(' ');
+            byte[] bytes = new byte[array.Length];
+            for (int i = 0; i < array.Length; i++) bytes[i] = Convert.ToByte(array[i], 16);
+            return WriteBytes(baseAddress, bytes);
+        }
+
         public bool WriteInt(IntPtr address, int value, params int[] offsets)
         {
             return WriteBytes(address, BitConverter.GetBytes(value), offsets);
@@ -264,6 +450,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteInt(IntPtr address, int value, params IntPtr[] offsets)
         {
             return WriteInt(address, value, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteInt(IntPtr address, int value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
         }
 
         public bool WriteLong(IntPtr address, long value, params int[] offsets)
@@ -276,6 +467,11 @@ namespace SimpleMemoryReading64and32
             return WriteLong(address, value, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteLong(IntPtr address, long value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
+        }
+
         public bool WriteFloat(IntPtr address, float value, params int[] offsets)
         {
             return WriteBytes(address, BitConverter.GetBytes(value), offsets);
@@ -284,6 +480,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteFloat(IntPtr address, float value, params IntPtr[] offsets)
         {
             return WriteFloat(address, value, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteFloat(IntPtr address, float value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
         }
 
         public bool WriteDouble(IntPtr address, double value, params int[] offsets)
@@ -296,6 +497,11 @@ namespace SimpleMemoryReading64and32
             return WriteDouble(address, value, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteDouble(IntPtr address, double value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
+        }
+
         public bool WriteVec(IntPtr address, Vector3 value, params int[] offsets)
         {
             return WriteBytes(address, new[] { value.X, value.Y, value.Z }.SelectMany(BitConverter.GetBytes).ToArray(), offsets);
@@ -304,6 +510,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteVec(IntPtr address, Vector3 value, params IntPtr[] offsets)
         {
             return WriteVec(address, value, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteVec(IntPtr address, Vector3 value)
+        {
+            return WriteBytes(address, new[] { value.X, value.Y, value.Z }.SelectMany(BitConverter.GetBytes).ToArray());
         }
 
         public bool WriteDoubleVec(IntPtr address, double[] value, params int[] offsets)
@@ -316,6 +527,11 @@ namespace SimpleMemoryReading64and32
             return WriteDoubleVec(address, value, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteDoubleVec(IntPtr address, double[] value)
+        {
+            return WriteBytes(address, value.SelectMany(BitConverter.GetBytes).ToArray());
+        }
+
         public bool WriteShort(IntPtr address, short value, params int[] offsets)
         {
             return WriteBytes(address, BitConverter.GetBytes(value), offsets);
@@ -324,6 +540,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteShort(IntPtr address, short value, params IntPtr[] offsets)
         {
             return WriteShort(address, value, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteShort(IntPtr address, short value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
         }
 
         public bool WriteUShort(IntPtr address, ushort value, params int[] offsets)
@@ -336,6 +557,11 @@ namespace SimpleMemoryReading64and32
             return WriteUShort(address, value, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteUShort(IntPtr address, ushort value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
+        }
+
         public bool WriteUInt(IntPtr address, uint value, params int[] offsets)
         {
             return WriteBytes(address, BitConverter.GetBytes(value), offsets);
@@ -344,6 +570,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteUInt(IntPtr address, uint value, params IntPtr[] offsets)
         {
             return WriteUInt(address, value, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteUInt(IntPtr address, uint value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
         }
 
         public bool WriteULong(IntPtr address, ulong value, params int[] offsets)
@@ -356,6 +587,11 @@ namespace SimpleMemoryReading64and32
             return WriteULong(address, value, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteULong(IntPtr address, ulong value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
+        }
+
         public bool WriteBool(IntPtr address, bool value, params int[] offsets)
         {
             return WriteBytes(address, BitConverter.GetBytes(value), offsets);
@@ -364,6 +600,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteBool(IntPtr address, bool value, params IntPtr[] offsets)
         {
             return WriteBool(address, value, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteBool(IntPtr address, ulong value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
         }
 
         public bool WriteBool(IntPtr address, int value, params int[] offsets)
@@ -376,6 +617,11 @@ namespace SimpleMemoryReading64and32
             return WriteBool(address, value, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteBool(IntPtr address, int value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
+        }
+
         public bool WriteString(IntPtr address, string value, params int[] offsets)
         {
             return WriteBytes(address, Encoding.UTF8.GetBytes(value), offsets);
@@ -386,6 +632,11 @@ namespace SimpleMemoryReading64and32
             return WriteString(address, value, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteString(IntPtr address, string value)
+        {
+            return WriteBytes(address, Encoding.UTF8.GetBytes(value));
+        }
+
         public bool WriteChar(IntPtr address, char value, params int[] offsets)
         {
             return WriteBytes(address, BitConverter.GetBytes(value), offsets);
@@ -394,6 +645,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteChar(IntPtr address, char value, params IntPtr[] offsets)
         {
             return WriteChar(address, value, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteChar(IntPtr address, char value)
+        {
+            return WriteBytes(address, BitConverter.GetBytes(value));
         }
 
         public bool WriteMatrix(IntPtr address, float[] matrix, params int[] offsets)
@@ -408,6 +664,13 @@ namespace SimpleMemoryReading64and32
             return WriteMatrix(address, matrix, offsets.Select(o => (int)o).ToArray());
         }
 
+        public bool WriteChar(IntPtr address, float[] matrix)
+        {
+            byte[] bytes = new byte[64];
+            for (int i = 0; i < 16; i++) Array.Copy(BitConverter.GetBytes(matrix[i]), 0, bytes, i * 4, 4);
+            return WriteBytes(address, bytes);
+        }
+
         public bool WriteNop(IntPtr address, int length, params int[] offsets)
         {
             return WriteBytes(address, Enumerable.Repeat((byte)144, length).ToArray(), offsets);
@@ -416,6 +679,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteNop(IntPtr address, int length, params IntPtr[] offsets)
         {
             return WriteNop(address, length, offsets.Select(o => (int)o).ToArray());
+        }
+
+        public bool WriteChar(IntPtr address, int length)
+        {
+            return WriteBytes(address, Enumerable.Repeat((byte)144, length).ToArray());
         }
 
         public IntPtr ScanForBytes(string module, string needle)
