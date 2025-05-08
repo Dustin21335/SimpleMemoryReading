@@ -347,19 +347,19 @@ namespace SimpleMemoryReading64and32
             return BitConverter.ToBoolean(ReadBytes(address, 1), 0);
         }
 
-        public string ReadString(IntPtr address, int length, params int[] offsets)
+        public string ReadString(IntPtr address, int length, Encoding encoding, params int[] offsets)
         {
-            return Encoding.UTF8.GetString(ReadBytes(address, length, offsets));
+            return encoding.GetString(ReadBytes(address, length, offsets));
         }
 
-        public string ReadString(IntPtr address, int length, params IntPtr[] offsets)
+        public string ReadString(IntPtr address, int length, Encoding encoding, params IntPtr[] offsets)
         {
-            return ReadString(address, length, offsets.Select(o => (int)o).ToArray());
+            return ReadString(address, length, encoding, offsets.Select(o => (int)o).ToArray());
         }
 
-        public string ReadString(IntPtr address, int length)
+        public string ReadString(IntPtr address, int length, Encoding encoding)
         {
-            return Encoding.UTF8.GetString(ReadBytes(address, length));
+            return encoding.GetString(ReadBytes(address, length));
         }
 
         public char ReadChar(IntPtr address, params int[] offsets)
