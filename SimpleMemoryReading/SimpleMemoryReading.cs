@@ -39,7 +39,8 @@ namespace SimpleMemoryReading64and32
 
         public IntPtr GetModuleBase(string module)
         {
-            return GetModule(module).BaseAddress;
+            ProcessModule processModule = GetModule(module);
+            return processModule != null ? GetModule(module).BaseAddress : IntPtr.Zero;
         }
 
         public byte[] ReadBytes(IntPtr baseAddress, int bytes, params int[] offsets)
