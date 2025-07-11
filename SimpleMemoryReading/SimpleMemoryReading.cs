@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace SimpleMemoryReading64and32
@@ -32,9 +33,10 @@ namespace SimpleMemoryReading64and32
 
         public ProcessModule GetModule(string module)
         {
+            module = module.ToLower().Replace(".dll", "").Replace(".exe", "").Trim();
             process.Refresh();
-            if (module.Contains(".exe") && process.MainModule != null) return process.MainModule;
-            return process.Modules.Cast<ProcessModule>().FirstOrDefault(m => m.ModuleName == module);
+            if (process.MainModule != null && module == process.ProcessName.ToLower().Replace(".exe", "").Trim()) return process.MainModule;
+            return process.Modules.Cast<ProcessModule>().FirstOrDefault(m => m.ModuleName.ToLower().Replace(".dll", "").Trim() == module);
         }
 
         public IntPtr GetModuleBase(string module)
@@ -702,6 +704,71 @@ namespace SimpleMemoryReading64and32
             for (int i = 0; i <= haystack.Length - needle.Length; i++)
             {
                 if (haystack.Skip(i).Take(needle.Length).SequenceEqual(needle)) return (IntPtr)i;
+            }
+            return IntPtr.Zero;
+        }
+
+        public IntPtr AOBScan(string module, string pattern)
+        {
+            return AOBScan(GetModule(module), pattern);
+        }
+
+        public IntPtr AOBScan(ProcessModule processModule, string pattern)
+        {
+            if (processModule == null) return IntPtr.Zero;
+            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
+            IntPtr baseAddress = processModule.BaseAddress;
+            int size = processModule.ModuleMemorySize;
+            byte[] buffer = new byte[size];
+            if (!Imports.ReadProcessMemory(handle, baseAddress, buffer, size, IntPtr.Zero)) return IntPtr.Zero;
+            for (int i = 0; i <= buffer.Length - bytes.Length; i++)
+            {
+                bool match = true;
+                for (int j = 0; j < bytes.Length; j++)
+                {
+                    if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) return baseAddress + i;
+            }
+            return IntPtr.Zero;
+        }
+
+        public IntPtr AOBScan(string pattern)
+        {
+            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
+            IntPtr address = IntPtr.Zero;
+            long max = 0x7FFFFFFF_FFFF;
+            while ((long)address < max)
+            {
+                if (Imports.VirtualQueryEx(handle, address, out Imports.MEMORY_BASIC_INFORMATION info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
+                bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0); 
+                if (readable)
+                {
+                    byte[] buffer = new byte[(long)info.RegionSize];
+                    if (Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero))
+                    {
+                        for (int i = 0; i <= buffer.Length - bytes.Length; i++)
+                        {
+                            bool match = true;
+                            for (int j = 0; j < bytes.Length; j++)
+                            {
+                                if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
+                                {
+                                    match = false;
+                                    break;
+                                }
+                            }
+                            if (match) return info.BaseAddress + i;
+                        }
+                    }
+                }
+                address = new IntPtr((long)info.BaseAddress + (long)info.RegionSize);
             }
             return IntPtr.Zero;
         }
