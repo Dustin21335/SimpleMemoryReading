@@ -6,7 +6,6 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace SimpleMemoryReading64and32
 {
@@ -710,97 +709,100 @@ namespace SimpleMemoryReading64and32
             return IntPtr.Zero;
         }
 
-        public List<IntPtr> AOBScan(string module, string pattern)
+        public List<IntPtr> AOBScan(string module, string pattern, bool reverse = false)
         {
-            return AOBScan(GetModule(module), pattern);
+            return AOBScan(GetModule(module), pattern, reverse);
         }
 
-        public List<IntPtr> AOBScan(ProcessModule module, string pattern)
+        public List<IntPtr> AOBScan(ProcessModule module, string pattern, bool reverse = false)
         {
             List<IntPtr> matches = new List<IntPtr>();
             if (module == null) return matches;
-            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
+            byte?[] bytes = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
             long start = (long)module.BaseAddress;
             long end = start + module.ModuleMemorySize;
+            List<Imports.MEMORY_BASIC_INFORMATION> regions = new List<Imports.MEMORY_BASIC_INFORMATION>();
             IntPtr address = module.BaseAddress;
             while ((long)address < end)
             {
-                if (Imports.VirtualQueryEx(handle, address, out Imports.MEMORY_BASIC_INFORMATION info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
+                if (Imports.VirtualQueryEx(handle, address, out var info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
                 long regionStart = (long)info.BaseAddress;
                 long regionEnd = regionStart + (long)info.RegionSize;
-                if (regionStart >= start && regionEnd <= end)
-                {
-                    bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
-                    if (readable)
-                    {
-                        byte[] buffer = new byte[(long)info.RegionSize];
-                        if (Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero))
-                        {
-                            for (int i = 0; i <= buffer.Length - bytes.Length; i++)
-                            {
-                                bool match = true;
-                                for (int j = 0; j < bytes.Length; j++)
-                                {
-                                    if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
-                                    {
-                                        match = false;
-                                        break;
-                                    }
-                                }
-                                if (match) matches.Add(info.BaseAddress + i);
-                            }
-                        }
-                    }
-                }
-
+                if (regionStart >= start && regionEnd <= end) regions.Add(info);
                 address = new IntPtr(regionEnd);
             }
-            return matches;
-        }
-
-        public List<IntPtr> AOBScan(string pattern)
-        {
-            List<IntPtr> matches = new List<IntPtr>();
-            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
-            IntPtr address = IntPtr.Zero;
-            long max = 0x7FFFFFFF_FFFF;
-            while ((long)address < max)
+            IEnumerable<Imports.MEMORY_BASIC_INFORMATION> regionList = reverse ? regions.AsEnumerable().Reverse() : regions;
+            foreach (Imports.MEMORY_BASIC_INFORMATION info in regionList)
             {
-                if (Imports.VirtualQueryEx(handle, address, out Imports.MEMORY_BASIC_INFORMATION info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
                 bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
-                if (readable)
+                if (!readable) continue;
+                byte[] buffer = new byte[(long)info.RegionSize];
+                if (!Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero)) continue;
+                int startIdx = reverse ? buffer.Length - bytes.Length : 0;
+                int endIdx = reverse ? -1 : buffer.Length - bytes.Length + 1;
+                int step = reverse ? -1 : 1;
+                for (int i = startIdx; i != endIdx; i += step)
                 {
-                    byte[] buffer = new byte[(long)info.RegionSize];
-                    if (Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero))
+                    bool match = true;
+                    for (int j = 0; j < bytes.Length; j++)
                     {
-                        for (int i = 0; i <= buffer.Length - bytes.Length; i++)
+                        if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
                         {
-                            bool match = true;
-                            for (int j = 0; j < bytes.Length; j++)
-                            {
-                                if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
-                                {
-                                    match = false;
-                                    break;
-                                }
-                            }
-                            if (match) matches.Add(info.BaseAddress + i);
+                            match = false;
+                            break;
                         }
                     }
+                    if (match) matches.Add(info.BaseAddress + i);
                 }
-                address = new IntPtr((long)info.BaseAddress + (long)info.RegionSize);
             }
             return matches;
         }
 
-        public List<IntPtr> AOBScanPrivateMemory(string pattern)
+        public List<IntPtr> AOBScan(string pattern, bool reverse = false)
         {
+            byte?[] bytes = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
+            List<Imports.MEMORY_BASIC_INFORMATION> regions = new List<Imports.MEMORY_BASIC_INFORMATION>();
+            IntPtr address = IntPtr.Zero;
+            long max = 0x7FFF_FFFF_FFFF;
+            while ((long)address < max)
+            {
+                if (Imports.VirtualQueryEx(handle, address, out var info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
+                regions.Add(info);
+                address = new IntPtr((long)info.BaseAddress + (long)info.RegionSize);
+            }
+            IEnumerable<Imports.MEMORY_BASIC_INFORMATION> regionList = reverse ? regions.AsEnumerable().Reverse() : regions;
             List<IntPtr> matches = new List<IntPtr>();
-            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
+            foreach (Imports.MEMORY_BASIC_INFORMATION info in regionList)
+            {
+                bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
+                if (!readable) continue;
+                byte[] buffer = new byte[(long)info.RegionSize];
+                if (!Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero)) continue;
+                int startIdx = reverse ? buffer.Length - bytes.Length : 0;
+                int endIdx = reverse ? -1 : buffer.Length - bytes.Length + 1;
+                int step = reverse ? -1 : 1;
+                for (int i = startIdx; i != endIdx; i += step)
+                {
+                    bool match = true;
+                    for (int j = 0; j < bytes.Length; j++)
+                    {
+                        if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
+                        {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) matches.Add(info.BaseAddress + i);
+                }
+            }
+            return matches;
+        }
+
+        public List<IntPtr> AOBScanPrivateMemory(string pattern, bool reverse = false)
+        {
+            byte?[] bytes = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
             List<(long Start, long End)> moduleRanges = process.Modules.Cast<ProcessModule>().Select(m => ((long)m.BaseAddress, (long)m.BaseAddress + m.ModuleMemorySize)).ToList();
+            List<Imports.MEMORY_BASIC_INFORMATION> regions = new List<Imports.MEMORY_BASIC_INFORMATION>();
             IntPtr address = IntPtr.Zero;
             long max = 0x7FFF_FFFF_FFFF;
             while ((long)address < max)
@@ -808,125 +810,129 @@ namespace SimpleMemoryReading64and32
                 if (Imports.VirtualQueryEx(handle, address, out Imports.MEMORY_BASIC_INFORMATION info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
                 long regionStart = (long)info.BaseAddress;
                 long regionEnd = regionStart + (long)info.RegionSize;
-                bool inModule = moduleRanges.Any(r => regionStart < r.End && regionEnd > r.Start);
-                if (inModule)
-                {
-                    address = new IntPtr(regionEnd);
-                    continue;
-                }
+                if (!moduleRanges.Any(r => regionStart < r.End && regionEnd > r.Start)) regions.Add(info);
+                address = new IntPtr(regionEnd);
+            }
+            IEnumerable<Imports.MEMORY_BASIC_INFORMATION> regionList = reverse ? regions.AsEnumerable().Reverse() : regions;
+            List<IntPtr> matches = new List<IntPtr>();
+            foreach (Imports.MEMORY_BASIC_INFORMATION info in regionList)
+            {
                 bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
-                if (readable)
+                if (!readable) continue;
+                byte[] buffer = new byte[(long)info.RegionSize];
+                if (!Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero)) continue;
+                int startIdx = reverse ? buffer.Length - bytes.Length : 0;
+                int endIdx = reverse ? -1 : buffer.Length - bytes.Length + 1;
+                int step = reverse ? -1 : 1;
+                for (int i = startIdx; i != endIdx; i += step)
                 {
-                    byte[] buffer = new byte[(long)info.RegionSize];
-                    if (Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero))
+                    bool match = true;
+                    for (int j = 0; j < bytes.Length; j++)
                     {
-                        for (int i = 0; i <= buffer.Length - bytes.Length; i++)
+                        if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
                         {
-                            bool match = true;
-                            for (int j = 0; j < bytes.Length; j++)
-                            {
-                                if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
-                                {
-                                    match = false;
-                                    break;
-                                }
-                            }
-                            if (match) matches.Add(info.BaseAddress + i);
+                            match = false;
+                            break;
                         }
                     }
+                    if (match) matches.Add(info.BaseAddress + i);
                 }
-                address = new IntPtr(regionEnd);
             }
             return matches;
         }
 
-        public IntPtr AOBScanFirst(string module, string pattern)
+        public IntPtr AOBScanFirst(string module, string pattern, bool reverse = false)
         {
-            return AOBScanFirst(GetModule(module), pattern);
+            return AOBScanFirst(GetModule(module), pattern, reverse);
         }
 
-        public IntPtr AOBScanFirst(ProcessModule module, string pattern)
+        public IntPtr AOBScanFirst(ProcessModule module, string pattern, bool reverse = false)
         {
             if (module == null) return IntPtr.Zero;
-            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
+            byte?[] bytes = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
             long start = (long)module.BaseAddress;
             long end = start + module.ModuleMemorySize;
+            List<Imports.MEMORY_BASIC_INFORMATION> regions = new List<Imports.MEMORY_BASIC_INFORMATION>();
             IntPtr address = module.BaseAddress;
             while ((long)address < end)
             {
-                if (Imports.VirtualQueryEx(handle, address, out Imports.MEMORY_BASIC_INFORMATION info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
+                if (Imports.VirtualQueryEx(handle, address, out var info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
                 long regionStart = (long)info.BaseAddress;
                 long regionEnd = regionStart + (long)info.RegionSize;
-                if (regionStart >= start && regionEnd <= end)
+                if (regionStart >= start && regionEnd <= end) regions.Add(info);
+                address = new IntPtr(regionEnd);
+            }
+            IEnumerable<Imports.MEMORY_BASIC_INFORMATION> regionList = reverse ? regions.AsEnumerable().Reverse() : regions;
+            foreach (Imports.MEMORY_BASIC_INFORMATION info in regionList)
+            {
+                bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
+                if (!readable) continue;
+                byte[] buffer = new byte[(long)info.RegionSize];
+                if (!Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero)) continue;
+                int startIdx = reverse ? buffer.Length - bytes.Length : 0;
+                int endIdx = reverse ? -1 : buffer.Length - bytes.Length + 1;
+                int step = reverse ? -1 : 1;
+                for (int i = startIdx; i != endIdx; i += step)
                 {
-                    bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
-                    if (readable)
+                    bool match = true;
+                    for (int j = 0; j < bytes.Length; j++)
                     {
-                        byte[] buffer = new byte[(long)info.RegionSize];
-                        if (Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero))
+                        if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
                         {
-                            for (int i = 0; i <= buffer.Length - bytes.Length; i++)
-                            {
-                                bool match = true;
-                                for (int j = 0; j < bytes.Length; j++)
-                                {
-                                    if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
-                                    {
-                                        match = false;
-                                        break;
-                                    }
-                                }
-                                if (match) return info.BaseAddress + i; 
-                            }
+                            match = false;
+                            break;
                         }
                     }
+                    if (match) return info.BaseAddress + i;
                 }
-                address = new IntPtr(regionEnd);
             }
             return IntPtr.Zero;
         }
 
-        public IntPtr AOBScanFirst(string pattern)
+        public IntPtr AOBScanFirst(string pattern, bool reverse = false)
         {
-            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
-            IntPtr address = IntPtr.Zero;
+            byte?[] bytes = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
             long max = 0x7FFFFFFF_FFFF;
+            List<Imports.MEMORY_BASIC_INFORMATION> regions = new();
+            IntPtr address = IntPtr.Zero;
             while ((long)address < max)
             {
-                if (Imports.VirtualQueryEx(handle, address, out Imports.MEMORY_BASIC_INFORMATION info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
-                bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
-                if (readable)
-                {
-                    byte[] buffer = new byte[(long)info.RegionSize];
-                    if (Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero))
-                    {
-                        for (int i = 0; i <= buffer.Length - bytes.Length; i++)
-                        {
-                            bool match = true;
-                            for (int j = 0; j < bytes.Length; j++)
-                            {
-                                if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
-                                {
-                                    match = false;
-                                    break;
-                                }
-                            }
-                            if (match) return info.BaseAddress + i; 
-                        }
-                    }
-                }
+                if (Imports.VirtualQueryEx(handle, address, out var info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
+                regions.Add(info);
                 address = new IntPtr((long)info.BaseAddress + (long)info.RegionSize);
             }
-            return IntPtr.Zero; 
+            IEnumerable<Imports.MEMORY_BASIC_INFORMATION> regionList = reverse ? regions.AsEnumerable().Reverse() : regions;
+            foreach (Imports.MEMORY_BASIC_INFORMATION info in regionList)
+            {
+                bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
+                if (!readable) continue;
+                byte[] buffer = new byte[(long)info.RegionSize];
+                if (!Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero)) continue;
+                int startIdx = reverse ? buffer.Length - bytes.Length : 0;
+                int endIdx = reverse ? -1 : buffer.Length - bytes.Length + 1;
+                int step = reverse ? -1 : 1;
+                for (int i = startIdx; i != endIdx; i += step)
+                {
+                    bool match = true;
+                    for (int j = 0; j < bytes.Length; j++)
+                    {
+                        if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
+                        {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return info.BaseAddress + i;
+                }
+            }
+            return IntPtr.Zero;
         }
 
-        public IntPtr AOBScanPrivateMemoryFirst(string pattern)
+        public IntPtr AOBScanPrivateMemoryFirst(string pattern, bool reverse = false)
         {
-            string[] parts = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            byte?[] bytes = parts.Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
+            byte?[] bytes = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(p => (p == "?" || p == "??") ? (byte?)null : Convert.ToByte(p, 16)).ToArray();
             List<(long Start, long End)> moduleRanges = process.Modules.Cast<ProcessModule>().Select(m => ((long)m.BaseAddress, (long)m.BaseAddress + m.ModuleMemorySize)).ToList();
+            List<Imports.MEMORY_BASIC_INFORMATION> regions = new List<Imports.MEMORY_BASIC_INFORMATION>();
             IntPtr address = IntPtr.Zero;
             long max = 0x7FFF_FFFF_FFFF;
             while ((long)address < max)
@@ -934,34 +940,32 @@ namespace SimpleMemoryReading64and32
                 if (Imports.VirtualQueryEx(handle, address, out Imports.MEMORY_BASIC_INFORMATION info, (uint)Marshal.SizeOf<Imports.MEMORY_BASIC_INFORMATION>()) == 0) break;
                 long regionStart = (long)info.BaseAddress;
                 long regionEnd = regionStart + (long)info.RegionSize;
-                bool inModule = moduleRanges.Any(r => regionStart < r.End && regionEnd > r.Start);
-                if (inModule)
-                {
-                    address = new IntPtr(regionEnd);
-                    continue;
-                }
+                if (!moduleRanges.Any(r => regionStart < r.End && regionEnd > r.Start)) regions.Add(info);
+                address = new IntPtr(regionEnd);
+            }
+            IEnumerable<Imports.MEMORY_BASIC_INFORMATION> regionList = reverse ? regions.AsEnumerable().Reverse() : regions;
+            foreach (Imports.MEMORY_BASIC_INFORMATION info in regionList)
+            {
                 bool readable = info.State == 0x1000 && ((info.Protect & 0x04) != 0 || (info.Protect & 0x02) != 0 || (info.Protect & 0x20) != 0);
-                if (readable)
+                if (!readable) continue;
+                byte[] buffer = new byte[(long)info.RegionSize];
+                if (!Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero)) continue;
+                int startIdx = reverse ? buffer.Length - bytes.Length : 0;
+                int endIdx = reverse ? -1 : buffer.Length - bytes.Length + 1;
+                int step = reverse ? -1 : 1;
+                for (int i = startIdx; i != endIdx; i += step)
                 {
-                    byte[] buffer = new byte[(long)info.RegionSize];
-                    if (Imports.ReadProcessMemory(handle, info.BaseAddress, buffer, buffer.Length, IntPtr.Zero))
+                    bool match = true;
+                    for (int j = 0; j < bytes.Length; j++)
                     {
-                        for (int i = 0; i <= buffer.Length - bytes.Length; i++)
+                        if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
                         {
-                            bool match = true;
-                            for (int j = 0; j < bytes.Length; j++)
-                            {
-                                if (bytes[j].HasValue && buffer[i + j] != bytes[j].Value)
-                                {
-                                    match = false;
-                                    break;
-                                }
-                            }
-                            if (match) return info.BaseAddress + i;
+                            match = false;
+                            break;
                         }
                     }
+                    if (match) return info.BaseAddress + i;
                 }
-                address = new IntPtr(regionEnd);
             }
             return IntPtr.Zero;
         }
