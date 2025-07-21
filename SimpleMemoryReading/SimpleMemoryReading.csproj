@@ -9,7 +9,7 @@
     <PackageId>SimpleMemoryReading</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.1.2</Version>
+    <Version>1.1.4</Version>
     <Authors>Dustin</Authors>
     <Company>._._.Dustin</Company>
     <Description>Simple memory reading and writing library</Description>

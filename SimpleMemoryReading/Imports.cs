@@ -25,5 +25,12 @@ namespace SimpleMemoryReading64and32
             public uint Protect;
             public uint Type;
         }
+
+        public const uint MEM_IMAGE = 0x1000000;
+        public const uint MEM_MAPPED = 0x40000;
+        public const uint MEM_PRIVATE = 0x20000;
+        public const uint MEM_COMMIT = 0x1000;
+        public const uint MEM_RESERVE = 0x2000;
+        public const uint MEM_FREE = 0x10000;
     }
 }
