@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SimpleMemoryReading64and32
@@ -120,14 +119,18 @@ namespace SimpleMemoryReading64and32
             return MemoryMarshal.Read<T>(ReadBytes(baseAddress, Marshal.SizeOf<T>(), offsets));
         }
 
+        public bool ReadArray<T>(IntPtr baseAddress, T[] values, params IntPtr[] offsets) where T : struct
+        {
+            int size = Marshal.SizeOf<T>() * values.Length;
+            byte[] buffer = ReadBytes(baseAddress, size, offsets);
+            if (buffer.Length != size) return false;
+            MemoryMarshal.Cast<byte, T>(buffer).CopyTo(values);
+            return true;
+        }
+
         public string ReadString(IntPtr address, int length, Encoding encoding, params IntPtr[] offsets)
         {
             return encoding.GetString(ReadBytes(address, length, offsets));
-        }
-
-        public Imports.Opcode[] ReadOpcodes(IntPtr address, int count, params IntPtr[] offsets)
-        {
-            return ReadBytes(address, count, offsets).Select(b => (Imports.Opcode)b).ToArray();
         }
 
         public bool WriteBytes(IntPtr baseAddress, byte[] bytes, params IntPtr[] offsets)
@@ -156,11 +159,6 @@ namespace SimpleMemoryReading64and32
         public bool WriteString(IntPtr address, string value, Encoding encoding, params IntPtr[] offsets)
         {
             return WriteBytes(address, encoding.GetBytes(value), offsets);
-        }
-
-        public bool WriteOpcodes(IntPtr address, Imports.Opcode[] opcodes, params IntPtr[] offsets)
-        {
-            return WriteArray<byte>(address, opcodes.Select(o => (byte)o).ToArray(), offsets);
         }
 
         public List<IntPtr> AOBScanRegions(List<Imports.MEMORY_BASIC_INFORMATION> regions, byte?[] pattern, Masks mask = null)
@@ -233,10 +231,13 @@ namespace SimpleMemoryReading64and32
         {
             if (!string.IsNullOrEmpty(patternMask))
             {
-                MatchCollection matches = Regex.Matches(pattern, @"\\x([0-9A-Fa-f]{2})");
-                int len = patternMask?.Length ?? matches.Count;
-                byte?[] result = new byte?[len];
-                for (int i = 0; i < len; i++) result[i] = patternMask != null && patternMask[i] == '?' ? null : Convert.ToByte(matches[i].Groups[1].Value, 16);
+                byte?[] result = new byte?[patternMask.Length];
+                byte[] bytes = Encoding.Default.GetBytes(pattern); 
+                for (int i = 0; i < patternMask.Length; i++)
+                {
+                    if (patternMask[i] == '?') result[i] = null;
+                    else result[i] = bytes[i];
+                }
                 return result;
             }
             return pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(b => b == "?" || b == "??" ? (byte?)null : Convert.ToByte(b, 16)).ToArray();

@@ -57,62 +57,6 @@ namespace SimpleMemoryReading64and32
             NoCache = 0x200,
             WriteCombine = 0x400
         }
-
-        [Flags]
-        public enum Opcode : byte
-        {
-            Nop = 0x90,
-            Int3 = 0xCC,
-            Ret = 0xC3,
-            PushEbp = 0x55,
-            Mov = 0x8B,
-            MovStore = 0x89,
-            MovEaxImm = 0xB8,
-            MovEcXImm = 0xB9,
-            MovEdXImm = 0xBA,
-            MovEbXImm = 0xBB,
-            MovEspImm = 0xBC,
-            MovEbPImm = 0xBD,
-            MovESIImm = 0xBE,
-            MovEDIImm = 0xBF,
-            Call = 0xE8,
-            Jmp = 0xE9,
-            JmpShort = 0xEB,
-            Je = 0x74,
-            Jne = 0x75,
-            Jo = 0x70,
-            Jno = 0x71,
-            Jc = 0x72,
-            Jnc = 0x73,
-            RexW = 0x48,
-            Rep = 0xF3,
-            RepNe = 0xF2,
-            PushImm8 = 0x6A,
-            PushImm32 = 0x68,
-            PopEax = 0x58,
-            PopEcX = 0x59,
-            PopEdX = 0x5A,
-            PopEbX = 0x5B,
-            PopEsp = 0x5C,
-            PopEbP = 0x5D,
-            PopESI = 0x5E,
-            PopEDI = 0x5F,
-            PushEax = 0x50,
-            PushEcX = 0x51,
-            PushEdX = 0x52,
-            PushEbX = 0x53,
-            PushEsp = 0x54,
-            PushEbP = 0x56,
-            PushESI = 0x57,
-            Add = 0x01,
-            Sub = 0x29,
-            Xor = 0x31,
-            Cmp = 0x39,
-            Ff = 0xFF,
-            C7 = 0xC7,
-            Cd = 0xCD,
-            F7 = 0xF7
-        }
     }
 
     public class Masks
