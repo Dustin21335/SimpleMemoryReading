@@ -173,7 +173,7 @@ namespace SimpleMemoryReading64and32
 
         public List<IntPtr> AOBScanRegion(Imports.Region region, string pattern, string patternMask = null, Masks mask = null)
         {
-            return AOBScanRegion(region, pattern, patternMask, mask);
+            return AOBScanRegion(region, PatternToBytes(pattern, patternMask), mask);
         }
 
         public List<IntPtr> AOBScanRegions(List<Imports.Region> regions, byte?[] pattern, Masks mask = null)
@@ -211,7 +211,7 @@ namespace SimpleMemoryReading64and32
             return AOBScanRegions(PrivateMemoryRegions, PatternToBytes(pattern, patternMask), mask);
         }
 
-        public List<IntPtr> AOBScanFreeeRegions(string pattern, string patternMask = null, Masks mask = null)
+        public List<IntPtr> AOBScanFreeRegions(string pattern, string patternMask = null, Masks mask = null)
         {
             return AOBScanRegions(FreeMemoryRegions, PatternToBytes(pattern, patternMask), mask);
         }
