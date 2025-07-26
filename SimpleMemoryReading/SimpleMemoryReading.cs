@@ -171,9 +171,19 @@ namespace SimpleMemoryReading64and32
             return results;
         }
 
+        public List<IntPtr> AOBScanRegion(Imports.Region region, string pattern, string patternMask = null, Masks mask = null)
+        {
+            return AOBScanRegion(region, pattern, patternMask, mask);
+        }
+
         public List<IntPtr> AOBScanRegions(List<Imports.Region> regions, byte?[] pattern, Masks mask = null)
         {
             return regions.SelectMany(r => AOBScanRegion(r, pattern, mask)).ToList();
+        }
+
+        public List<IntPtr> AOBScanRegions(List<Imports.Region> regions, string pattern, string patternMask = null, Masks mask = null)
+        {
+            return AOBScanRegions(regions, PatternToBytes(pattern, patternMask), mask);
         }
 
         public List<IntPtr> AOBScanModuleRegions(string module, string pattern, string patternMask = null, Masks mask = null)
