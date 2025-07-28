@@ -14,10 +14,10 @@ namespace SimpleMemoryReading64and32
         [DllImport("kernel32.dll")]
         public static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out Region lpBuffer, uint dwLength);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll")]
         public static extern bool IsWow64Process(IntPtr hProcess, out bool wow64);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll")]
         public static extern bool IsWow64Process(IntPtr hProcess, out ushort processMachine, out ushort nativeMachine);
 
         [StructLayout(LayoutKind.Sequential)]

@@ -74,7 +74,7 @@ namespace SimpleMemoryReading64and32
             for (int i = 0; i < offsets.Length - 1; i++)
             {
                 if (!Imports.ReadProcessMemory(Handle, baseAddress + offsets[i], buffer, buffer.Length, IntPtr.Zero)) return Array.Empty<byte>();
-                baseAddress = IntPtr.Size == 4 ? (IntPtr)BitConverter.ToInt32(buffer, 0) : (IntPtr)BitConverter.ToInt64(buffer, 0);
+                baseAddress = Is64Bit ? (IntPtr)BitConverter.ToInt64(buffer, 0) : (IntPtr)BitConverter.ToInt32(buffer, 0);
             }
             if (offsets.Length > 0) baseAddress += offsets[offsets.Length - 1];
             byte[] result = new byte[size];
@@ -118,7 +118,7 @@ namespace SimpleMemoryReading64and32
             for (int i = 0; i < offsets.Length - 1; i++)
             {
                 if (!Imports.ReadProcessMemory(Handle, baseAddress + offsets[i], buffer, buffer.Length, IntPtr.Zero)) return false;
-                baseAddress = IntPtr.Size == 4 ? (IntPtr)BitConverter.ToInt32(buffer, 0) : (IntPtr)BitConverter.ToInt64(buffer, 0);
+                baseAddress = Is64Bit ? (IntPtr)BitConverter.ToInt64(buffer, 0) : (IntPtr)BitConverter.ToInt32(buffer, 0);
             }
             if (offsets.Length > 0) baseAddress += offsets[^1];
             return Imports.WriteProcessMemory(Handle, baseAddress, bytes, size, IntPtr.Zero);

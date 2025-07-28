@@ -6,12 +6,12 @@
     <AssemblyName>SimpleMemoryReading</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Nullable>annotations</Nullable>
+
     <PackageId>SimpleMemoryReading</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.1.9</Version>
+    <Version>1.2.1</Version>
     <Authors>Dustin</Authors>
-    <Company>._._.Dustin</Company>
     <Description>Simple memory reading and writing library</Description>
     <RepositoryUrl>https://github.com/Dustin21335/SimpleMemoryReading</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
