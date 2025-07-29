@@ -1,4 +1,3 @@
-# Simple Memory Reading
 <sup>Simple memory reading and writing library by [Dustin](https://github.com/Dustin21335)</sup>
 
 [![](https://img.shields.io/nuget/v/SimpleMemoryReading.svg?style=for-the-badge)](https://www.nuget.org/packages/SimpleMemoryReading/)
@@ -7,11 +6,13 @@
 ## Features
 <details>
 
+  ### Simple Memory Reading
+
   #### Initializing
   - **Simple Memory Reading (String) (SimpleMemoryReading):** Initializes using the name of the process.
   - **Simple Memory Reading (Int) (SimpleMemoryReading):** Initializes using the process ID.
   - **Simple Memory Reading (Process) (SimpleMemoryReading):** Initializes using Process.
-
+  
   #### Properties
   - **Process () (Process):** Gets the process
   - **Handle () (IntPtr):** Gets the process handle
@@ -22,7 +23,7 @@
   - **Private Memory Regions () (List<Imports.Region>):** Gets private regions of the process
   - **Free Memory Regions () (List<Imports.Region>):** Gets free regions of the process
   - **Reserved Memory Regions () (List<Imports.Region>):** Gets reserved regions of the process
-
+  
   #### Methods
   - **Initialize (Process) ():** Used for initializing
   - **Get Module (String) (ProcessModule):** Gets Process Module
@@ -51,5 +52,21 @@
   - **AOB Scan Free Regions (List<IntPtr>) (String, String, Masks):** Scans all free regions that use a specific array of bytes
   - **AOB Scan Reserved Regions (List<IntPtr>) (String, String, Masks):** Scans all reserved regions that use a specific array of bytes
   - **Pattern To Bytes (List<IntPtr>) (String, String):** Converts a string to bytes
+
+  ### Imports
+
+  - **Region (IntPtr, IntPtr, MemoryProtect, IntPtr, MemoryState, MemoryProtect, MemoryType):** This contains BaseAddress, AllocationBase, AllocationProtect, RegionSize, State, Protect, Type
+  - **MemoryState (Uint):** This contains Commit, Reserve, Free
+  - **MemoryType (Uint):** This contains Private, Mapped, Image
+  - **MemoryProtect (Uint):** This contains NoAccess, ReadOnly, ReadWrite, WriteCopy, Execute, ExecuteRead, ExecuteReadCopy, Guard, NoCache, WriteCombine
+
+  ### Masks
+
+  #### Initializing
+  - **Masks (Uint):** Initializes using Uint
+  
+    #### Properties
+  - **ReadableMask (Mask):** This contains the ReadOnly, ReadWrite, ExecuteRead, ExecuteReadWrite, ExecuteWriteCopy, and WriteCopy from MemoryProtect
+  - **WritableMask (Mask):** This contains the ReadWrite, ExecuteReadWrite, ExecuteReadCopy, ExecuteWriteCopy, WriteCopy from MemoryProtect
 
 </details>
