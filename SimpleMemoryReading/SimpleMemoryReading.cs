@@ -97,13 +97,12 @@ namespace SimpleMemoryReading64and32
             return MemoryMarshal.Read<T>(ReadBytes(address, Marshal.SizeOf<T>(), offsets));
         }
 
-        public bool ReadArray<T>(IntPtr address, T[] values, params IntPtr[] offsets) where T : struct
+        public T[] ReadArray<T>(IntPtr address, int length, params IntPtr[] offsets) where T : struct
         {
-            int size = Marshal.SizeOf<T>() * values.Length;
+            int size = Marshal.SizeOf<T>() * length;
             byte[] buffer = ReadBytes(address, size, offsets);
-            if (buffer.Length != size) return false;
-            MemoryMarshal.Cast<byte, T>(buffer).CopyTo(values);
-            return true;
+            if (buffer.Length != size) return Array.Empty<T>();
+            return MemoryMarshal.Cast<byte, T>(buffer).ToArray();
         }
 
         public string ReadString(IntPtr address, int size, Encoding encoding, params IntPtr[] offsets)
@@ -193,7 +192,7 @@ namespace SimpleMemoryReading64and32
 
         public List<IntPtr> AOBScanModuleRegions(ProcessModule module, string pattern, string patternMask = null, Masks mask = null)
         {
-            return AOBScanRegion(new Imports.Region { BaseAddress = module.BaseAddress, RegionSize = module.ModuleMemorySize, State = Imports.MemoryState.Commit, Type = Imports.MemoryType.Image }, PatternToBytes(pattern, patternMask), mask);
+            return AOBScanRegions(AllRegions.Where(r => r.BaseAddress == module.BaseAddress && r.RegionSize == module.ModuleMemorySize).ToList(), PatternToBytes(pattern, patternMask), mask);
         }
 
         public List<IntPtr> AOBScanModuleRegions(string pattern, string patternMask = null, Masks mask = null)

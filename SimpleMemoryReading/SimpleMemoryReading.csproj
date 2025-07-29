@@ -10,11 +10,13 @@
     <PackageId>SimpleMemoryReading</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <Authors>Dustin</Authors>
     <Description>Simple memory reading and writing library</Description>
     <RepositoryUrl>https://github.com/Dustin21335/SimpleMemoryReading</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageTags>memory, memory-reading, memory-writing, process-memory, aob-scan, pattern-scan, read-process-memory, write-process-memory, dotnet </PackageTags>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
       <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\" />

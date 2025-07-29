@@ -64,18 +64,4 @@ namespace SimpleMemoryReading64and32
             WriteCombine = 0x400
         }
     }
-
-    public class Masks
-    {
-        public uint Value;
-
-        public Masks(uint value)
-        {
-            Value = value;
-        }
-
-        public static readonly Masks ReadableMask = new Masks((uint)(Imports.MemoryProtect.ReadOnly | Imports.MemoryProtect.ReadWrite | Imports.MemoryProtect.ExecuteRead | Imports.MemoryProtect.ExecuteReadWrite | Imports.MemoryProtect.ExecuteWriteCopy | Imports.MemoryProtect.WriteCopy));
-
-        public static readonly Masks WritableMask = new Masks((uint)(Imports.MemoryProtect.ReadWrite | Imports.MemoryProtect.ExecuteReadWrite | Imports.MemoryProtect.ExecuteWriteCopy | Imports.MemoryProtect.WriteCopy));
-    }
 }
