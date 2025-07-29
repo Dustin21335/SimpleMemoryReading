@@ -1,4 +1,4 @@
-<sup>Simple memory reading and writing library by [Dustin](https://github.com/Dustin21335)</sup>
+# Simple memory reading and writing library by [Dustin](https://github.com/Dustin21335)
 
 [![](https://img.shields.io/nuget/v/SimpleMemoryReading.svg?style=for-the-badge)](https://www.nuget.org/packages/SimpleMemoryReading/)
 [![](https://img.shields.io/nuget/dt/SimpleMemoryReading.svg?style=for-the-badge)](https://www.nuget.org/packages/SimpleMemoryReading/)
