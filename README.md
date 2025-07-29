@@ -65,7 +65,7 @@
   #### Initializing
   - **Masks (Uint):** Initializes using Uint
   
-    #### Properties
+  #### Properties
   - **ReadableMask (Mask):** This contains the ReadOnly, ReadWrite, ExecuteRead, ExecuteReadWrite, ExecuteWriteCopy, and WriteCopy from MemoryProtect
   - **WritableMask (Mask):** This contains the ReadWrite, ExecuteReadWrite, ExecuteReadCopy, ExecuteWriteCopy, WriteCopy from MemoryProtect
 
