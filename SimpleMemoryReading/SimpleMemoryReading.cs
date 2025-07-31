@@ -110,6 +110,11 @@ namespace SimpleMemoryReading64and32
             return encoding.GetString(ReadBytes(address, size, offsets));
         }
 
+        public string[] ReadStringArray(IntPtr address, int length, Encoding encoding, params IntPtr[] offsets)
+        {
+            return ReadArray<IntPtr>(address, length, offsets).Select(p => ReadString(ReadPointer(p), 128, encoding).Split('\0')[0]).ToArray();
+        }
+
         public bool WriteBytes(IntPtr address, byte[] bytes, int size, params IntPtr[] offsets)
         {
             IntPtr baseAddress = address;
@@ -141,6 +146,11 @@ namespace SimpleMemoryReading64and32
         public bool WriteString(IntPtr address, string value, Encoding encoding, params IntPtr[] offsets)
         {
             return WriteBytes(address, encoding.GetBytes(value), offsets);
+        }
+
+        public bool WriteStringArray(IntPtr address, string[] values, Encoding encoding, params IntPtr[] offsets)
+        {
+            return ReadArray<IntPtr>(address, values.Length, offsets).Select((p, i) => WriteString(ReadPointer(p), values[i], encoding)).All(s => s);
         }
 
         public List<IntPtr> AOBScanRegion(Imports.Region region, byte?[] pattern, Masks mask = null)
