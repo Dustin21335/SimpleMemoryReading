@@ -31,7 +31,7 @@ namespace SimpleMemoryReading64and32
             if (process == null) return;
             this.Process = process;
             this.Handle = process.Handle;
-            this.Is64Bit = Environment.Is64BitOperatingSystem && (Imports.IsWow64Process(Handle, out ushort pm, out _) ? pm == 0 : Imports.IsWow64Process(Handle, out bool w) && !w);
+            this.Is64Bit = Imports.IsWow64Process(Handle, out bool isWow64) && !isWow64;
             this.AllRegions = GetRegions();
             this.ModuleMemoryRegions = AllRegions.FindAll(r => r.Type == Imports.MemoryType.Image);
             this.MappedMemoryRegions = AllRegions.FindAll(r => r.Type == Imports.MemoryType.Mapped);
@@ -78,7 +78,7 @@ namespace SimpleMemoryReading64and32
             }
             if (offsets.Length > 0) baseAddress += offsets[offsets.Length - 1];
             byte[] result = new byte[size];
-            Imports.ReadProcessMemory(Handle, baseAddress, result, result.Length, IntPtr.Zero);
+            if (!Imports.ReadProcessMemory(Handle, baseAddress, result, result.Length, IntPtr.Zero)) return Array.Empty<byte>();
             return result;
         }
 
