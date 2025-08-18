@@ -17,6 +17,19 @@ namespace SimpleMemoryReading64and32
         [DllImport("kernel32.dll")]
         public static extern bool IsWow64Process(IntPtr hProcess, out bool wow64);
 
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+
+        [DllImport("kernel32.dll")]
+        public static extern uint SuspendThread(IntPtr hThread);
+
+        [DllImport("kernel32.dll")]
+        public static extern int ResumeThread(IntPtr hThread);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool CloseHandle(IntPtr hHandle);
+
+
         [StructLayout(LayoutKind.Sequential)]
         public struct Region
         {
@@ -59,6 +72,20 @@ namespace SimpleMemoryReading64and32
             Guard = 0x100,
             NoCache = 0x200,
             WriteCombine = 0x400
+        }
+
+        [Flags]
+        public enum ThreadAccess : int
+        {
+            TERMINATE = 0x0001,
+            SUSPEND_RESUME = 0x0002,
+            GET_CONTEXT = 0x0008,
+            SET_CONTEXT = 0x0010,
+            SET_INFORMATION = 0x0020,
+            QUERY_INFORMATION = 0x0040,
+            SET_THREAD_TOKEN = 0x0080,
+            IMPERSONATE = 0x0100,
+            DIRECT_IMPERSONATION = 0x0200
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -25,6 +26,7 @@ namespace SimpleMemoryReading64and32
         public List<Imports.Region> PrivateMemoryRegions { get; private set; }
         public List<Imports.Region> FreeMemoryRegions { get; private set; }
         public List<Imports.Region> ReservedMemoryRegions { get; private set; }
+        public List<ProcessThread> FrozenProcessThreads { get; private set; } = new List<ProcessThread>();
 
         private void Initialize(Process process)
         {
@@ -65,6 +67,17 @@ namespace SimpleMemoryReading64and32
                 address = new IntPtr(next);
             }
             return regions;
+        }
+
+        public List<ProcessThread> GetProcessThreads(Process process)
+        {
+            process.Refresh();
+            return process.Threads.Cast<ProcessThread>().ToList();
+        }
+
+        public List<ProcessThread> GetProcessThreads()
+        {
+            return GetProcessThreads(Process);
         }
 
         public byte[] ReadBytes(IntPtr address, int size, params IntPtr[] offsets)
@@ -246,6 +259,50 @@ namespace SimpleMemoryReading64and32
                 return result;
             }
             return pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(b => b == "?" || b == "??" ? (byte?)null : Convert.ToByte(b, 16)).ToArray();
+        }
+
+        public void FreezeThread(ProcessThread processThread)
+        {
+            if (processThread == null || FrozenProcessThreads.Contains(processThread)) return;
+            IntPtr threadHandle = Imports.OpenThread(Imports.ThreadAccess.SUSPEND_RESUME, false, (uint)processThread.Id);
+            if (threadHandle == IntPtr.Zero) return;
+            Imports.SuspendThread(threadHandle);
+            Imports.CloseHandle(threadHandle);
+            FrozenProcessThreads.Add(processThread);
+        }
+
+        public void UnfreezeThread(ProcessThread processThread)
+        {
+            if (processThread == null || !FrozenProcessThreads.Contains(processThread)) return;
+            IntPtr threadHandle = Imports.OpenThread(Imports.ThreadAccess.SUSPEND_RESUME, false, (uint)processThread.Id);
+            if (threadHandle == IntPtr.Zero) return;
+            Imports.ResumeThread(threadHandle);
+            Imports.CloseHandle(threadHandle);
+            FrozenProcessThreads.Remove(processThread);
+        }
+
+        public void FreezeProcess(Process process)
+        {
+            if (process == null) return;
+            GetProcessThreads(process).ForEach(t => FreezeThread(t));
+        }
+
+        public void FreezeProcess()
+        {
+            FreezeProcess(Process);
+        }
+
+        public void UnfreezeProcess(Process process)
+        {
+            if (process == null) return;
+            FieldInfo processIdField = typeof(ProcessThread).GetField("_processId", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (processIdField == null) return;
+            FrozenProcessThreads.Where(t => t != null && (int)processIdField.GetValue(t) == process.Id).ToList().ForEach(t => UnfreezeThread(t));
+        }
+
+        public void UnfreezeProcess()
+        {
+            UnfreezeProcess(Process);
         }
     }
 }
