@@ -102,7 +102,9 @@ namespace SimpleMemoryReading64and32
 
         public IntPtr ReadPointer(IntPtr address, params IntPtr[] offsets)
         {
-            return Is64Bit ? (IntPtr)BitConverter.ToInt64(ReadBytes(address, offsets), 0) : (IntPtr)BitConverter.ToInt32(ReadBytes(address, offsets), 0);
+            byte[] bytes = ReadBytes(address, offsets);
+            if (bytes.Length < (Is64Bit ? 8 : 4))  return IntPtr.Zero;
+            return Is64Bit ? (IntPtr)BitConverter.ToInt64(bytes, 0) : (IntPtr)BitConverter.ToInt32(bytes, 0);
         }
 
         public T Read<T>(IntPtr address, params IntPtr[] offsets) where T : struct
