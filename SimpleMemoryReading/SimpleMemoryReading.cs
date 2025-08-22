@@ -109,7 +109,9 @@ namespace SimpleMemoryReading64and32
 
         public T Read<T>(IntPtr address, params IntPtr[] offsets) where T : struct
         {
-            return MemoryMarshal.Read<T>(ReadBytes(address, Marshal.SizeOf<T>(), offsets));
+            byte[] bytes = ReadBytes(address, Marshal.SizeOf<T>(), offsets);
+            if (bytes.Length < Marshal.SizeOf<T>()) return default;
+            return MemoryMarshal.Read<T>(bytes);
         }
 
         public T[] ReadArray<T>(IntPtr address, int length, params IntPtr[] offsets) where T : struct
