@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SimpleMemoryReading64and32
 {
@@ -27,6 +29,7 @@ namespace SimpleMemoryReading64and32
         public List<Imports.Region> FreeMemoryRegions { get; private set; }
         public List<Imports.Region> ReservedMemoryRegions { get; private set; }
         public List<ProcessThread> FrozenProcessThreads { get; private set; } = new List<ProcessThread>();
+        public Dictionary<IntPtr, CancellationTokenSource> FrozenAddresses { get; private set; } = new Dictionary<IntPtr, CancellationTokenSource>();
 
         private void Initialize(Process process)
         {
@@ -118,7 +121,7 @@ namespace SimpleMemoryReading64and32
         {
             int size = Marshal.SizeOf<T>() * length;
             byte[] buffer = ReadBytes(address, size, offsets);
-            if (buffer.Length != size) return Array.Empty<T>();
+            if (buffer.Length < size) return Array.Empty<T>();
             return MemoryMarshal.Cast<byte, T>(buffer).ToArray();
         }
 
@@ -307,6 +310,28 @@ namespace SimpleMemoryReading64and32
         public void UnfreezeProcess()
         {
             UnfreezeProcess(Process);
+        }
+
+        public void FreezeAddress<T>(IntPtr address, T value, int delay, bool writeOnlyIfChanged) where T : struct 
+        {
+            if (FrozenAddresses.ContainsKey(address)) return;
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            FrozenAddresses.Add(address, cancellationTokenSource);
+            Task.Run(async () =>
+            {
+                while (!cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    if (!writeOnlyIfChanged || !Read<T>(address).Equals(value)) Write(address, value);
+                    await Task.Delay(delay); 
+                }
+            }, cancellationTokenSource.Token);
+        }
+
+        public void UnfreezeAddress(IntPtr address)
+        {
+            if (!FrozenAddresses.TryGetValue(address, out CancellationTokenSource cancellationTokenSource)) return;
+            cancellationTokenSource.Cancel();
+            FrozenAddresses.Remove(address);
         }
     }
 }
