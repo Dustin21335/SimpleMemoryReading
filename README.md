@@ -17,12 +17,12 @@
   - **Process () (Process):** Gets the process
   - **Handle () (IntPtr):** Gets the process handle
   - **Is 64 () (Bool):** Gets if the process is 64 bit
-  - **All Regions () (List<Imports.Region>):** Gets all regions of the process
-  - **Module Memory Regions () (List<Imports.Region>):** Gets module regions of the process
-  - **Mapped Memory Regions () (List<Imports.Region>):** Gets mapped regions of the process
-  - **Private Memory Regions () (List<Imports.Region>):** Gets private regions of the process
-  - **Free Memory Regions () (List<Imports.Region>):** Gets free regions of the process
-  - **Reserved Memory Regions () (List<Imports.Region>):** Gets reserved regions of the process
+  - **All Regions () (List&lt;Imports.Region>):** Gets all regions of the process
+  - **Module Memory Regions () (List&lt;Imports.Region&gt;):** Gets module regions of the process
+  - **Mapped Memory Regions () (List&lt;Imports.Region&gt;):** Gets mapped regions of the process
+  - **Private Memory Regions () (List&lt;Imports.Region&gt;):** Gets private regions of the process
+  - **Free Memory Regions () (List&lt;Imports.Region&gt;):** Gets free regions of the process
+  - **Reserved Memory Regions () (List&lt;Imports.Region&gt;):** Gets reserved regions of the process
   
   #### Methods
   - **Initialize (Process) ():** Used for initializing
@@ -40,18 +40,26 @@
   - **Write (bool) (IntPtr, T, IntPtr[]):** Writes the value of any single value excluding strings
   - **Write Array (Bool) (IntPtr, T[], IntPtr[]):** Write the value of any array value
   - **Write String (Bool) (IntPtr, String, Encoding, IntPtr[]):** Writes the value of a string
-  - **AOB Scan Region (List<IntPtr>) (Imports.Region, byte[], Masks):** Scans a region that use a specific array of bytes
-  - **AOB Scan Region (List<IntPtr>) (Imports.Region, String, String, Masks):** Scans a region that use a specific array of bytes 
-  - **AOB Scan Regions (List<IntPtr>) (Imports.Region, byte[], Masks):** Scans regions that use a specific array of bytes
-  - **AOB Scan Regions (List<IntPtr>) (Imports.Region, String, String, Masks):** Scans regions that use a specific array of bytes 
-  - **AOB Scan Module Regions (List<IntPtr>) (String, String, String, Masks):** Scans the regions of a specific module
-  - **AOB Scan Module Regions (List<IntPtr>) (ProcessModule, String, String, Masks):** Scans the regions of a specific module
-  - **AOB Scan Module Regions (List<IntPtr>) (String, String, Masks):** Scans all module regions that use a specific array of bytes
-  - **AOB Scan Mapped Regions (List<IntPtr>) (String, String, Masks):** Scans all mapped regions that use a specific array of bytes
-  - **AOB Scan Private Regions (List<IntPtr>) (String, String, Masks):** Scans all private regions that use a specific array of bytes
-  - **AOB Scan Free Regions (List<IntPtr>) (String, String, Masks):** Scans all free regions that use a specific array of bytes
-  - **AOB Scan Reserved Regions (List<IntPtr>) (String, String, Masks):** Scans all reserved regions that use a specific array of bytes
-  - **Pattern To Bytes (List<IntPtr>) (String, String):** Converts a string to bytes
+  - **AOB Scan Region (List&lt;IntPtr&gt;) (Imports.Region, byte[], Masks):** Scans a region that use a specific array of bytes
+  - **AOB Scan Region (List&lt;IntPtr&gt;) (Imports.Region, String, String, Masks):** Scans a region that use a specific array of bytes 
+  - **AOB Scan Regions (List&lt;IntPtr&gt;) (Imports.Region, byte[], Masks):** Scans regions that use a specific array of bytes
+  - **AOB Scan Regions (List&lt;IntPtr&gt;) (Imports.Region, String, String, Masks):** Scans regions that use a specific array of bytes 
+  - **AOB Scan Module Regions (List&lt;IntPtr&gt;) (String, String, String, Masks):** Scans the regions of a specific module
+  - **AOB Scan Module Regions (List&lt;IntPtr&gt;) (ProcessModule, String, String, Masks):** Scans the regions of a specific module
+  - **AOB Scan Module Regions (List&lt;IntPtr&gt;) (String, String, Masks):** Scans all module regions that use a specific array of bytes
+  - **AOB Scan Mapped Regions (List&lt;IntPtr&gt;) (String, String, Masks):** Scans all mapped regions that use a specific array of bytes
+  - **AOB Scan Private Regions (List&lt;IntPtr&gt;) (String, String, Masks):** Scans all private regions that use a specific array of bytes
+  - **AOB Scan Free Regions (List&lt;IntPtr&gt;) (String, String, Masks):** Scans all free regions that use a specific array of bytes
+  - **AOB Scan Reserved Regions (List&lt;IntPtr&gt;) (String, String, Masks):** Scans all reserved regions that use a specific array of bytes
+  - **Pattern To Bytes (List&lt;IntPtr&gt;) (String, String):** Converts a string to bytes
+  - **Freeze Thread (ProcessThread) ():** Freezes a process thread
+  - **Unfreeze Thread (ProcessThread) ():** Freezes a process thread
+  - **Freeze Process (Process) ():** Freezes a process
+  - **Freeze Process () ():** Freezes the process selected process from initializing
+  - **Unfreeze Process (Process) ():** Unfreezes a process
+  - **Unfreeze Process () ():** Unfreeze the process selected process from initializing
+  - **Freeze Address () (IntPtr, T, int, bool):** Freezes an address using a task loop
+  - **Unfreeze Address () (IntPtr, T, int, bool):** Unfreezes an address and stops the task loop
 
   ### Imports
 
